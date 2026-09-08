@@ -1,7 +1,7 @@
 # Implementation Plan — Decentralized Document Verification System
 
 **Project:** Дипломна робота — «Децентралізована система верифікації документів на основі власної реалізації блокчейн-технології»
-**Source documents:** [PRD v1.3 (FINAL, architecture-approved)](PRD.md), [use cases](use-cases/), [QA test cases](qa/)
+**Source documents:** [PRD v1.3 (FINAL, architecture-approved)](PRD.md); Use Cases: [Blockchain Core](use-cases/blockchain_core_use_cases.md), [Consensus & Network](use-cases/consensus_network_use_cases.md), [Web Interface](use-cases/web_interface_use_cases.md), [Attack Resistance Testing](use-cases/attack_resistance_testing_use_cases.md); QA Test Cases: [Blockchain Core](qa/blockchain_core_test_cases.md), [Consensus & Network](qa/consensus_network_test_cases.md), [Web Interface](qa/web_interface_test_cases.md), [Attack Resistance Testing](qa/attack_resistance_testing_test_cases.md)
 **Created:** 2026-09-07
 **Audience:** the thesis author, writing all code by hand, solo, over a multi-month timeline.
 

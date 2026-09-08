@@ -14,7 +14,7 @@
 ## Репозиторій коду
 
 - [[README|README проєкту]]
-- Git: (додати посилання на GitHub/GitLab репозиторій після Завдання 4)
+- [Git](https://github.com/YakymivDanylo/Diploma_project.git)
 
 ## Статус проєкту
 
