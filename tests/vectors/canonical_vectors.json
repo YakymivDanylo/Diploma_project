@@ -1,0 +1,80 @@
+[
+  {
+    "name": "simple_document_record",
+    "input": {
+      "issuer_id": "issuer-university-1",
+      "document_hash": "ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF01234567",
+      "issued_at": 1735689600000,
+      "metadata": {
+        "recipient": "Ivan Petrenko"
+      }
+    },
+    "expected_canonical": "{\"document_hash\":\"ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF01234567\",\"issued_at\":1735689600000,\"issuer_id\":\"issuer-university-1\",\"metadata\":{\"recipient\":\"Ivan Petrenko\"}}",
+    "expected_sha256_hex": "a95df8f115f7ccb9b59f8fa9c14d66548ca226acdf61e41de626269fa592b70c"
+  },
+  {
+    "name": "nested_with_list",
+    "input": {
+      "index": 1,
+      "document_records": [
+        {
+          "document_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "issuer_id": "issuer-1"
+        },
+        {
+          "document_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "issuer_id": "issuer-1"
+        }
+      ],
+      "proposer_id": "node-1"
+    },
+    "expected_canonical": "{\"document_records\":[{\"document_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"issuer_id\":\"issuer-1\"},{\"document_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"issuer_id\":\"issuer-1\"}],\"index\":1,\"proposer_id\":\"node-1\"}",
+    "expected_sha256_hex": "b5bf6cb875dd315b055fd0ea194c96435039f1895947e5f800fb0a942e6c9529"
+  },
+  {
+    "name": "empty_object",
+    "input": {},
+    "expected_canonical": "{}",
+    "expected_sha256_hex": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+  },
+  {
+    "name": "cyrillic_metadata",
+    "input": {
+      "issuer_id": "issuer-university-1",
+      "metadata": {
+        "recipient": "Іван Петренко",
+        "program": "Комп'ютерні науки"
+      }
+    },
+    "expected_canonical": "{\"issuer_id\":\"issuer-university-1\",\"metadata\":{\"program\":\"Комп'ютерні науки\",\"recipient\":\"Іван Петренко\"}}",
+    "expected_sha256_hex": "e2e8265fddd2d02d8f44d8bcac9b68e816937e93a988ed9a1b4b4798ca5c95bf"
+  },
+  {
+    "name": "primitive_literals_and_negative_numbers",
+    "input": {
+      "active": true,
+      "revoked": false,
+      "ipfs_cid": null,
+      "index": -1,
+      "nonce": 18446744073709551615
+    },
+    "expected_canonical": "{\"active\":true,\"index\":-1,\"ipfs_cid\":null,\"nonce\":18446744073709551615,\"revoked\":false}",
+    "expected_sha256_hex": "e88bb3006185eb6ef9aacbe71fb0d501a130cd549e740df77f34d17157cc7319"
+  },
+  {
+    "name": "escaped_string_content",
+    "input": {
+      "note": "line1\nline2\ttab \"quoted\" back\\slash"
+    },
+    "expected_canonical": "{\"note\":\"line1\\nline2\\ttab \\\"quoted\\\" back\\\\slash\"}",
+    "expected_sha256_hex": "3374e9b295883460baafa406c56cd4464b10330742366063a233f035fbe8a70a"
+  },
+  {
+    "name": "empty_list_value",
+    "input": {
+      "document_records": []
+    },
+    "expected_canonical": "{\"document_records\":[]}",
+    "expected_sha256_hex": "f4f18d34b2d15ebcabf196bfdfaf498f9ea3bec39783657fd1577ed6c3d706f1"
+  }
+]
