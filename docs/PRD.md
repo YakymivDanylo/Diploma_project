@@ -7,9 +7,9 @@
 
 **Author:** dr.yakimiv@gmail.com
 
-**Version:** 1.3 — **FINAL, architecture-approved.** v1.2 PASSED architecture review with 5 small required polish items (confirmed as sentence-level clarifications, not structural rewrites — no further review round required). This revision applies those 5 items: (1) `IssuerRegistry` redefined as a network-wide issuer trust store (not just "this node's own signing identity"), with an explicit DocumentRecord-signature-verification step added to FR-6's checklist; (2) the FR-6/FR-23 key resolver contract made time-aware (`resolve(node_id, at_timestamp)`) so it can correctly support `NodeKeyPair` rotation, as the acceptance criteria already required; (3) FR-22's duplicate-hash rejection broadened to also cover the current pending batch/mempool, not just finalized blocks; (4) FR-24 clarified that changing the configured difficulty requires starting from a fresh chain; (5) the schema section's stray `validator_id` renamed to `node_id` for naming consistency. Also clarifies (non-normatively) that genesis's placeholder `algorithm`/`sealed_consensus` values use a reserved literal exempt from algorithm-specific checks. v1.2 was reached after the SECOND architecture-review round and addressed second-round CRITICAL findings (proposer identity in the hashed preimage for both PoW and PBFT; key registries for historical validator-key and issuer-key resolution; the issuer-signing contract for `POST /documents`), MAJOR findings (PoW proof-of-work target/difficulty verification; PBFT `commit_signatures` verification at chain-sync time, not just proposal time; PoW-only fork tie-break scope; a single duplicate-document-hash policy; a fully-specified deterministic genesis), and MINOR findings (block-schema hashed/non-hashed grouping fix; stale Cross-Reference row removed; consistent empty-chain wording; `GET /node/info` revalidation-cost fix). Builds on v1.1, which addressed CRITICAL findings C-1–C-5 and MAJOR findings M-1–M-14 from the first review round; see the Schema Recommendations note and the revised Epics 2/3/4 below.
+**Version:** 1.4 — v1.4 adds CI/CD (GitHub Actions) as an explicit engineering-process requirement, per the author's own decision following the supervisor-approved proposal's DevSecOps section — not an architecture-review finding; Trivy scanning, Prometheus/Grafana observability, and ADRs from that proposal section remain explicitly out of this PRD's scope pending a separate decision. See the new "CI/CD (GitHub Actions)" section below. **FINAL, architecture-approved (Epics 1–5; the v1.4 CI/CD addition has not itself been through architecture review).** v1.2 PASSED architecture review with 5 small required polish items (confirmed as sentence-level clarifications, not structural rewrites — no further review round required). This revision applies those 5 items: (1) `IssuerRegistry` redefined as a network-wide issuer trust store (not just "this node's own signing identity"), with an explicit DocumentRecord-signature-verification step added to FR-6's checklist; (2) the FR-6/FR-23 key resolver contract made time-aware (`resolve(node_id, at_timestamp)`) so it can correctly support `NodeKeyPair` rotation, as the acceptance criteria already required; (3) FR-22's duplicate-hash rejection broadened to also cover the current pending batch/mempool, not just finalized blocks; (4) FR-24 clarified that changing the configured difficulty requires starting from a fresh chain; (5) the schema section's stray `validator_id` renamed to `node_id` for naming consistency. Also clarifies (non-normatively) that genesis's placeholder `algorithm`/`sealed_consensus` values use a reserved literal exempt from algorithm-specific checks. v1.2 was reached after the SECOND architecture-review round and addressed second-round CRITICAL findings (proposer identity in the hashed preimage for both PoW and PBFT; key registries for historical validator-key and issuer-key resolution; the issuer-signing contract for `POST /documents`), MAJOR findings (PoW proof-of-work target/difficulty verification; PBFT `commit_signatures` verification at chain-sync time, not just proposal time; PoW-only fork tie-break scope; a single duplicate-document-hash policy; a fully-specified deterministic genesis), and MINOR findings (block-schema hashed/non-hashed grouping fix; stale Cross-Reference row removed; consistent empty-chain wording; `GET /node/info` revalidation-cost fix). Builds on v1.1, which addressed CRITICAL findings C-1–C-5 and MAJOR findings M-1–M-14 from the first review round; see the Schema Recommendations note and the revised Epics 2/3/4 below.
 
-**Last updated:** 2026-09-07 (v1.3)
+**Last updated:** 2026-09-10 (v1.4)
 
 ## Document Purpose
 
@@ -27,6 +27,48 @@ This PRD defines requirements for the five epics that make up the diploma projec
 
 - **IPFS off-chain document storage** — evaluated as an optional/future extension only. The core system stores only the SHA-256 hash of a document on-chain; the source document file itself is NOT required to be persisted in IPFS (or anywhere else) for the diploma deliverable to be considered complete. If implemented, IPFS integration is additive and MUST NOT be a blocker for any acceptance criterion in Epics 2–5. See Epic 2 §Schema changes and Epic 4 §UI changes for the exact boundary.
 - **RabbitMQ as inter-node transport** — evaluated and explicitly rejected. A centralized message broker contradicts the decentralized architecture under study and would weaken the validity of the Sybil-attack demonstration in Epic 5 (a broker becomes a single point of trust/failure that no longer reflects a peer-to-peer network). See Epic 3 §Non-goals. This decision is final for the scope of this thesis and should not be revisited without a new architectural review.
+
+## CI/CD (GitHub Actions)
+
+**Added in v1.4, by explicit author decision (not an architecture-review finding).** This is a cross-cutting engineering-process requirement spanning all epics, not a 6th epic — it defines no user-facing functionality. Its scope is grounded in the supervisor-approved thesis proposal's `pkm/proposal.md` "Інженерні практики розробки (DevSecOps)" section (supervisor confirmed "no objections" per `pkm/06-Supervisor-Feedback.md`), narrowed to exactly what the author has decided so far: a GitHub Actions CI pipeline that lints, type-checks, and runs the unit test suites (Python and frontend) plus a Docker image build check, on every push/PR. Attack-scenario tests (Epic 5) are placed in their own, separate CI job — they depend on a running docker-compose network (Epic 3 FR-8) and are materially slower than unit tests, so bundling them into the same job as lint/unit-tests/build would slow down the fast-feedback loop that CI is meant to provide for routine commits.
+
+**Explicitly out of scope of this PRD version (undecided, not rejected):** Trivy container-image scanning, Prometheus/Grafana observability, and Architecture Decision Records (ADRs) are all listed in the same proposal section but the author has not yet decided whether/how to include them. They are deliberately NOT specified anywhere in this document and MUST NOT be inferred as implied requirements from this section. Prometheus/Grafana in particular has been explicitly deferred by the author as an optional future addition, distinct from Trivy/ADRs which are simply undecided pending a separate decision — this distinction should not be read as either having been decided.
+
+### Functional requirements
+
+1. A GitHub Actions workflow file exists at `.github/workflows/ci.yml`, triggered on `push` and `pull_request`, that runs, at minimum, against `src/blockchain_core/` and `src/node/` (per `docs/IMPLEMENTATION_PLAN.md`'s target repository layout): `ruff check` (lint), `mypy` (type-check), and the `pytest` unit test suite (`tests/core/`, `tests/node/`). The job fails (non-zero exit / failed GitHub check) if any of these three steps fails.
+2. The same workflow (as a separate job or step) runs the frontend unit test suite for `web/` using `vitest`, triggered on the same `push`/`pull_request` events; a failing `vitest` run fails the workflow.
+3. The workflow includes a Docker image build step that builds the node image via `docker build -f docker/node.Dockerfile .` (the Dockerfile introduced by Implementation Plan Slice 19) on every `push`/`pull_request`, to verify the Dockerfile remains buildable. This is a build-verification step only — no image push/publish/registry step is in scope.
+4. Epic 5's attack-scenario tests (`attacks/` — the Sybil scenarios per Epic 5 FR-1/FR-2 and the backdating/tampering scenarios per Epic 5 FR-3, which depend on Epic 3's docker-compose network, Epic 3 FR-8) run in a distinct GitHub Actions job (or a distinct workflow file), separate from the lint/type-check/unit-test/Docker-build job in FR-1–FR-3. This job's trigger (e.g., every push, pushes/PRs targeting `main` only, or manual `workflow_dispatch`) is a project decision left to the implementer, but whichever is chosen MUST be stated explicitly in the job's name or in a comment in the workflow file — it must not be silently narrower or broader than documented.
+5. CI results (pass/fail, per step) are visible per-commit and per-pull-request via GitHub's native Actions check UI; no additional reporting/dashboarding tool is required or in scope.
+
+### Non-functional requirements
+
+- The lint/type-check/unit-test/Docker-build job (FR-1–FR-3) is the fast-feedback path and must not itself invoke the slower attack-scenario suite (FR-4) — keeping routine push/PR feedback fast is the explicit reason the two are split into separate jobs.
+- The workflow(s) in scope here (FR-1–FR-3) must not require any secrets, cloud credentials, container-registry push access, or other external-service tokens to execute — no image publishing and no external scanning service is in scope for this PRD version.
+- The workflow(s) must run on GitHub's standard hosted Ubuntu runners with no dependency on self-hosted infrastructure.
+
+### Acceptance criteria
+
+- [ ] A GitHub Actions workflow file exists at `.github/workflows/ci.yml` that triggers on `push`/`pull_request`, runs `ruff check`, `mypy`, and `pytest` against `src/blockchain_core`/`src/node`, and fails the job if any step fails.
+- [ ] The same or a companion workflow builds the node Docker image with `docker build -f docker/node.Dockerfile .` on every `push`/`pull_request`, and this step visibly fails when `docker/node.Dockerfile` fails to build.
+- [ ] `vitest` runs against `web/` on every `push`/`pull_request`, and a deliberately failing frontend unit test causes the workflow run to report failure.
+- [ ] A distinct, separately named CI job or workflow runs Epic 5's attack-scenario tests, is verifiably not part of the same job as the lint/type-check/unit-test/Docker-build steps, and states its trigger condition explicitly in the job name or a workflow comment.
+- [ ] No workflow file, job, or step defined under this section references Trivy, Prometheus, Grafana, or ADR generation/validation — none of these are in scope of this PRD version.
+
+### Affected endpoints
+
+N/A — this is a repository CI configuration concern, not a running-system API.
+
+### Schema changes
+
+N/A.
+
+### UI changes
+
+N/A — GitHub's native Actions/checks UI is used as-is; no application UI (Epic 4) is affected.
+
+---
 
 ## Schema Recommendations (Reference)
 
